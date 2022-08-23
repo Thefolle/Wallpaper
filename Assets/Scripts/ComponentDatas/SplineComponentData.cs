@@ -7,9 +7,9 @@ using UnityEngine;
 [GenerateAuthoringComponent]
 public struct SplineComponentData : IComponentData
 {
-    public float3 Start;
-    public float3 End;
     public float S;
+    public Entity Start;
+    public Entity End;
 
     public bool isArrived()
     {

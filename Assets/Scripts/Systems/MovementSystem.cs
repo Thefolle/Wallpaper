@@ -36,8 +36,8 @@ public partial class MovementSystem : SystemBase
                     */
                     ecb.AddComponent(entity, new SplineComponentData
                     {
-                            Start = getTranslationComponentDataFromEntity[pieceComponentData.Node].Value,
-                            End = getTranslationComponentDataFromEntity[currentNodeComponentData.Up].Value
+                            Start = pieceComponentData.Node,
+                            End = currentNodeComponentData.Up
                     });
                     movedNodeComponentData.Node = entity;
                     ecb.SetComponent(currentNodeComponentData.Up, movedNodeComponentData);

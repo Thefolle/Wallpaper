@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public partial class SplineMovementSystem : SystemBase
 {
@@ -17,23 +18,34 @@ public partial class SplineMovementSystem : SystemBase
         var ecb = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>().CreateCommandBuffer();
         var deltaTime = Time.DeltaTime;
 
-        Dependency = Entities.ForEach((ref SplineComponentData splineComponentData, ref Translation translation, in Entity entity) => {
+        var getTranslationComponentDataFromEntity = GetComponentDataFromEntity<Translation>();
+        var getNodeComponentDataFromEntity = GetComponentDataFromEntity<NodeComponentData>();
+
+        Dependency = Entities.ForEach((ref SplineComponentData splineComponentData, ref PieceComponentData pieceComponentDatain, in Entity entity) => {
             splineComponentData.S += 0.05f * deltaTime;
 
             if (splineComponentData.isArrived())
             {
                 splineComponentData.S = 1;
-                translation.Value = splineComponentData.End;
+                ecb.SetComponent(entity, getTranslationComponentDataFromEntity[splineComponentData.End]);
                 ecb.RemoveComponent<SplineComponentData>(entity);
+
+                var nodeToFreeComponentData = getNodeComponentDataFromEntity[splineComponentData.Start];
+                nodeToFreeComponentData.Node = Entity.Null;
+                ecb.SetComponent(splineComponentData.Start, nodeToFreeComponentData);
+
+                pieceComponentDatain.Node = splineComponentData.End;
             } else
             {
-                translation.Value = math.lerp(splineComponentData.Start, splineComponentData.End, splineComponentData.S);
+                ecb.SetComponent(entity, new Translation
+                {
+                    Value = math.lerp(getTranslationComponentDataFromEntity[splineComponentData.Start].Value, getTranslationComponentDataFromEntity[splineComponentData.End].Value, splineComponentData.S)
+                });
             }
             
         }).Schedule(Dependency);
 
         World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>().AddJobHandleForProducer(Dependency);
 
-        //ecb.Playback(World.EntityManager);
     }
 }
